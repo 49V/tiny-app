@@ -22,6 +22,13 @@ app.get("/urls", (request, response) => {
   response.render('urls_index', templateVars);
 });
 
+app.get("/urls/:id", (request, response) => {
+  var longURL = urlDatabase[request.params.id.toString()];
+  let templateVars = { shortURL: request.params.id,
+                       longURL: longURL};
+  response.render("urls_show", templateVars);
+});
+
 app.get("/hello", (request, response) => {
   response.send("<html><body>Hello <b>World</b></body></html>\n");
 });
