@@ -19,6 +19,8 @@ app.get("/", (request, response) => {
 }); 
 
 app.get("/u/:shortURL", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+
   let shortURL = request.url.replace('/u/', ''); 
   let longURL = urlDatabase[shortURL];
   // If exists
@@ -27,19 +29,23 @@ app.get("/u/:shortURL", (request, response) => {
 });
 
 app.get("/urls.json", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   response.json(urlDatabase);
 });
   
 app.get("/urls", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   let templateVars = { urls: urlDatabase };
   response.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   response.render("urls_new");
 });
 
 app.post("/urls", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const {longURL} = request.body;
   const shortURL = helpers.generateRandomString();
   urlDatabase[shortURL] = longURL;
@@ -48,6 +54,7 @@ app.post("/urls", (request, response) => {
 });
 
 app.get("/urls/:id", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   var longURL = urlDatabase[request.params.id.toString()];
   let templateVars = { shortURL: request.params.id,
                        longURL: longURL};
@@ -55,6 +62,7 @@ app.get("/urls/:id", (request, response) => {
 });
 
 app.get("/hello", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   response.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
