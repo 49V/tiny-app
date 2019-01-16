@@ -29,6 +29,11 @@ app.get("/urls/new", (request, response) => {
   response.render("urls_new");
 });
 
+app.post("/urls", (request, response) => {
+  console.log(request.body);
+  response.send("Received");
+});
+
 app.get("/urls/:id", (request, response) => {
   var longURL = urlDatabase[request.params.id.toString()];
   let templateVars = { shortURL: request.params.id,
