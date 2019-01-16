@@ -1,4 +1,5 @@
 const express = require("express");
+const helpers = require("./lib/helpers");
 const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8081;
@@ -7,6 +8,7 @@ app.use(bodyParser.urlencoded({ extended: true}));
 
 app.set("view engine", "ejs");
 
+// TODO: ADD ALL ERROR HANDLING
 var urlDatabase = {
   "b2xVn2" : "http://www.lighthouselabs.ca",
   "9sm5xK" : "http://www.google.com"
@@ -15,6 +17,14 @@ var urlDatabase = {
 app.get("/", (request, response) => {
   response.send("Hello!");
 }); 
+
+app.get("/u/:shortURL", (request, response) => {
+  let shortURL = request.url.replace('/u/', ''); 
+  let longURL = urlDatabase[shortURL];
+  // If exists
+  response.redirect(longURL);
+  // Else
+});
 
 app.get("/urls.json", (request, response) => {
   response.json(urlDatabase);
@@ -30,8 +40,11 @@ app.get("/urls/new", (request, response) => {
 });
 
 app.post("/urls", (request, response) => {
-  console.log(request.body);
-  response.send("Received");
+  const {longURL} = request.body;
+  const shortURL = helpers.generateRandomString();
+  urlDatabase[shortURL] = longURL;
+
+  response.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/:id", (request, response) => {
