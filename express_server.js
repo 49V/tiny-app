@@ -1,6 +1,7 @@
 const express = require("express");
-const helpers = require("./lib/helpers");
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser')
+const helpers = require("./lib/helpers");
 const app = express();
 const PORT = 8082;
 
@@ -14,9 +15,12 @@ var urlDatabase = {
   "9sm5xK" : "http://www.google.com"
 };
 
-app.get("/", (request, response) => {
-  response.send("Hello!");
-}); 
+
+app.use(cookieParser())
+
+app.get('/', function (request, response) {
+  response.send("Hello");
+})
 
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
