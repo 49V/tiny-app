@@ -55,10 +55,28 @@ app.post("/urls", (request, response) => {
 
 app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  var longURL = urlDatabase[request.params.id.toString()];
+  const longURL = urlDatabase[request.params.id.toString()];
   let templateVars = { shortURL: request.params.id,
                        longURL: longURL};
   response.render("urls_show", templateVars);
+});
+
+app.post("/urls/:shortURL", (request, response) => {
+  const shortURL = request.params.shortURL;
+  const newLongURL = request.body.longURL;
+  
+  if (newLongURL) {
+    urlDatabase[shortURL] = newLongURL;
+
+    let templateVars = { shortURL,
+                         longURL : newLongURL
+                       };
+
+    response.render(`urls_show`, templateVars);
+    
+  } else {
+    response.status(400).send("Must enter a new long URL");
+  }  
 });
 
 app.post("/urls/:id/delete", (request, response) => {

@@ -3,8 +3,12 @@
   <head></head>
     <% include ./partials/_header %>
   <body>
-    <ul>
-      <li><%= longURL %> : <a href='#'><%= shortURL %></a></li>
-      </ul>
+    <center>
+      <h1>shortURL: <%= shortURL %> </h1> 
+      <form action="<%= shortURL %>" method="POST">
+        <input type="url" name="longURL" placeholder="<%= longURL %>" required>
+        <button>Update</button>
+      </form>
+    </center>
   </body>
 </html>
