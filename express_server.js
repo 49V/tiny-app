@@ -2,7 +2,7 @@ const express = require("express");
 const helpers = require("./lib/helpers");
 const bodyParser = require("body-parser");
 const app = express();
-const PORT = 8081;
+const PORT = 8082;
 
 app.use(bodyParser.urlencoded({ extended: true}));
 
@@ -59,6 +59,17 @@ app.get("/urls/:id", (request, response) => {
   let templateVars = { shortURL: request.params.id,
                        longURL: longURL};
   response.render("urls_show", templateVars);
+});
+
+app.post("/urls/:id/delete", (request, response) => {
+  const shortURL = request.params.id;
+  if(shortURL) {
+    delete urlDatabase[shortURL];
+    response.redirect("/urls");
+  } else {
+    // Resource doesn't exist
+    response.statusCode = "404";
+  }
 });
 
 app.get("/hello", (request, response) => {
