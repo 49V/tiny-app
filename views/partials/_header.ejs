@@ -4,7 +4,10 @@
 
 <% if (username) {%>
   <h1 style="text-align: right;"><%= username %></h1>
-<%} else {%>
+  <form action="/logout" method="POST" style="text-align: right;">
+    <button>Logout</button>
+  </form>
+  <%} else {%>
   <form action="/login" method="POST" style="text-align: right;">
     
     <input type="text" name="username" placeholder="username" required>

@@ -34,6 +34,11 @@ app.post('/login', function (request, response) {
   return;
 });
 
+app.post('/logout', (request, response) => {
+  response.clearCookie('username');
+  response.redirect('/urls');
+});
+
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   
