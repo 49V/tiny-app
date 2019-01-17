@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const helpers = require("./lib/helpers");
 const app = express();
-const PORT = 8080;
+const PORT = 8079;
 
 app.use(bodyParser.urlencoded({ extended: true}));
 
@@ -53,14 +53,16 @@ app.get('/login', function (request, response) {
 
 app.post('/login', function (request, response) {
   
-  const username = request.body.username;
-  if (username) {
-    response.cookie('username', username);
-    response.redirect('/urls');
-    
+  const { email, password } = request.body;
+  let user_id;
+
+  if (user_id = helpers.checkEmailPasswordMatch(users, email, password)) {
+    response.cookie('user_id', user_id);
+    return response.redirect('/');
   } else {
-    response.status(400).send("Must enter a username");
+    return response.status(403).send("Incorrect email / password combination");
   }
+
   return;
 });
 
