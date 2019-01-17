@@ -54,10 +54,10 @@ app.get('/login', function (request, response) {
 app.post('/login', function (request, response) {
   
   const { email, password } = request.body;
-  let user_id;
+  let id;
   console.log(`${email} : ${password}`)
-  if (user_id = helpers.checkEmailPasswordMatch(users, email, password)) {
-    response.cookie('user_id', user_id);
+  if (id = helpers.checkEmailPasswordMatch(users, email, password)) {
+    response.cookie('user_id', users[id]);
     return response.redirect('/');
   } else {
     return response.status(403).send("Incorrect email / password combination");
@@ -96,7 +96,7 @@ app.post("/register", (request, response) => {
       password
     };
 
-    response.cookie("user_id", id);
+    response.cookie("user_id", users[id]);
 
     response.redirect("/urls");
   }
