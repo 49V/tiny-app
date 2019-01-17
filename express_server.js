@@ -39,6 +39,10 @@ app.post('/logout', (request, response) => {
   response.redirect('/urls');
 });
 
+app.get("/register", (request, response) => {
+  response.render('register');
+});
+
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   
