@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const helpers = require("./lib/helpers");
 const app = express();
-const PORT = 8079;
+const PORT = 8078;
 
 app.use(bodyParser.urlencoded({ extended: true}));
 
@@ -55,7 +55,7 @@ app.post('/login', function (request, response) {
   
   const { email, password } = request.body;
   let user_id;
-
+  console.log(`${email} : ${password}`)
   if (user_id = helpers.checkEmailPasswordMatch(users, email, password)) {
     response.cookie('user_id', user_id);
     return response.redirect('/');
@@ -67,7 +67,7 @@ app.post('/login', function (request, response) {
 });
 
 app.post('/logout', (request, response) => {
-  response.clearCookie('user');
+  response.clearCookie('user_id');
   response.redirect('/urls');
 });
 
