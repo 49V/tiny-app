@@ -73,11 +73,21 @@ app.post("/register", (request, response) => {
   } else if(!email && !password) {
     response.status(400).send("Both email and password are required to register");
   } else {
-    //Save to some database
-    response.status(200).send("Account successfully created");
+    
+    const id = helpers.generateRandomString();    
+    users[id] = {
+      id,
+      email,
+      password
+    };
+
+    response.cookie("user_id", id);
+
+    response.redirect("/urls");
   }
 
 });
+
 
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
