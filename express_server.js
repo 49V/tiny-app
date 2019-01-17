@@ -32,7 +32,15 @@ const users = {
 app.use(cookieParser())
 
 app.get('/', function (request, response) {
-  response.send("Hello");
+  
+  const cookie = request.cookies["user_id"];
+
+  if (cookie) {
+    return response.redirect('/urls');
+  } else {
+    return response.redirect('/login');
+  }
+
 });
 
 app.get("/hello", (request, response) => {
