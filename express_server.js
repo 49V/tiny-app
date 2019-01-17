@@ -22,6 +22,18 @@ app.get('/', function (request, response) {
   response.send("Hello");
 })
 
+app.post('/login', function (request, response) {
+  const username = request.body.username;
+  if (username) {
+    response.cookie('username', username);
+    response.redirect('/urls');
+    
+  } else {
+    response.status(400).send("Must enter a username");
+  }
+  return;
+});
+
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
 
