@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const helpers = require("./lib/helpers");
 const app = express();
-const PORT = 8082;
+const PORT = 8080;
 
 app.use(bodyParser.urlencoded({ extended: true}));
 
@@ -54,7 +54,7 @@ app.post('/login', function (request, response) {
 });
 
 app.post('/logout', (request, response) => {
-  response.clearCookie('username');
+  response.clearCookie('user');
   response.redirect('/urls');
 });
 
@@ -109,10 +109,9 @@ app.get("/urls.json", (request, response) => {
 app.get("/urls", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
 
-
   let templateVars = { 
                       urls: urlDatabase,
-                      username: request.cookies["username"]  
+                      user: request.cookies["user_id"]  
                       };
   response.render('urls_index', templateVars);
 });
@@ -120,7 +119,7 @@ app.get("/urls", (request, response) => {
 app.get("/urls/new", (request, response) => {
   let templateVars = { 
     urls: urlDatabase,
-    username: request.cookies["username"]  
+    user: request.cookies["user_id"]  
   };
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   response.render("urls_new", templateVars);
@@ -138,7 +137,7 @@ app.post("/urls", (request, response) => {
 app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const longURL = urlDatabase[request.params.id.toString()];
-  let templateVars = { username: request.cookies["username"],
+  let templateVars = { user: request.cookies["user_id"],
                        shortURL: request.params.id,
                        longURL: longURL};
   response.render("urls_show", templateVars);
@@ -151,7 +150,7 @@ app.post("/urls/:shortURL", (request, response) => {
   if (newLongURL) {
     urlDatabase[shortURL] = newLongURL;
 
-    let templateVars = { username: request.cookies["username"],
+    let templateVars = { user: request.cookies["user_id"],
                          shortURL,
                          longURL : newLongURL
                        };
