@@ -19,7 +19,12 @@ app.use(cookieParser())
 
 app.get('/', function (request, response) {
   response.send("Hello");
-})
+});
+
+app.get("/hello", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+  response.send("<html><body>Hello <b>World</b></body></html>\n");
+});
 
 app.post('/login', function (request, response) {
   
@@ -41,6 +46,21 @@ app.post('/logout', (request, response) => {
 
 app.get("/register", (request, response) => {
   response.render('register');
+});
+
+app.post("/register", (request, response) => {
+  const {email, password} = request.body;
+
+  if(email && !password) {
+    response.status(400).send("Password is required to register");
+  } else if(!email && password) {
+    response.status(400).send("Email is required to register");
+  } else if(!email && !password) {
+    response.status(400).send("Both email and password are required to register");
+  } else {
+    //Save to some database
+    response.status(200).send("Account successfully created");
+  }
 });
 
 app.get("/u/:shortURL", (request, response) => {
@@ -124,11 +144,6 @@ app.post("/urls/:id/delete", (request, response) => {
     // Resource doesn't exist
     response.statusCode = "404";
   }
-});
-
-app.get("/hello", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
