@@ -40,6 +40,17 @@ app.get("/hello", (request, response) => {
   response.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+app.get('/login', function (request, response) {
+  const cookie = request.cookies["user_id"];
+
+  if (cookie) {
+    response.status(400).send("Already logged in.");
+  } else {
+    response.render('login')
+  }
+  
+});
+
 app.post('/login', function (request, response) {
   
   const username = request.body.username;
