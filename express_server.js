@@ -15,7 +15,6 @@ var urlDatabase = {
   "9sm5xK" : "http://www.google.com"
 };
 
-
 app.use(cookieParser())
 
 app.get('/', function (request, response) {
@@ -23,6 +22,7 @@ app.get('/', function (request, response) {
 })
 
 app.post('/login', function (request, response) {
+  
   const username = request.body.username;
   if (username) {
     response.cookie('username', username);
@@ -36,7 +36,7 @@ app.post('/login', function (request, response) {
 
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-
+  
   let shortURL = request.url.replace('/u/', ''); 
   let longURL = urlDatabase[shortURL];
   // If exists
@@ -51,13 +51,22 @@ app.get("/urls.json", (request, response) => {
   
 app.get("/urls", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  let templateVars = { urls: urlDatabase };
+
+
+  let templateVars = { 
+                      urls: urlDatabase,
+                      username: request.cookies["username"]  
+                      };
   response.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (request, response) => {
+  let templateVars = { 
+    urls: urlDatabase,
+    username: request.cookies["username"]  
+  };
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.render("urls_new");
+  response.render("urls_new", templateVars);
 });
 
 app.post("/urls", (request, response) => {
@@ -72,7 +81,8 @@ app.post("/urls", (request, response) => {
 app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const longURL = urlDatabase[request.params.id.toString()];
-  let templateVars = { shortURL: request.params.id,
+  let templateVars = { username: request.cookies["username"],
+                       shortURL: request.params.id,
                        longURL: longURL};
   response.render("urls_show", templateVars);
 });
@@ -84,7 +94,8 @@ app.post("/urls/:shortURL", (request, response) => {
   if (newLongURL) {
     urlDatabase[shortURL] = newLongURL;
 
-    let templateVars = { shortURL,
+    let templateVars = { username: request.cookies["username"],
+                         shortURL,
                          longURL : newLongURL
                        };
 
