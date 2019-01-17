@@ -72,8 +72,8 @@ app.post("/register", (request, response) => {
     response.status(400).send("Email is required to register");
   } else if(!email && !password) {
     response.status(400).send("Both email and password are required to register");
-  } else if(helpers.objectValueExists(users, email)) {
-    
+  } else if(helpers.objectValueExists(users, "email", email)) {
+    response.status(400).send("User with that email already exists!");
   } else {
     
     const id = helpers.generateRandomString();    
