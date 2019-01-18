@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const helpers = require("./lib/helpers");
@@ -23,12 +24,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: '$2b$10$sS5PodpJtN565U5yq16d0uzyJq.KZ8dHZTGOFOd.eTux/Y4SyPbNe'
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: '$2b$10$KiPYx7Cn.KdPVptIoFeocefn/Lcqb0QYkOcD3pd4M0fZQ3rQNX4pS'
   }
 }
 
@@ -37,8 +38,9 @@ app.use(cookieParser());
 
 // Middleware that adds a user to the locals object for easy access
 app.use( (request, response, next) => {
-
-  response.locals.user_id = request.cookies["user_id"].id;
+  if (request.cookies["user_id"]) {
+    response.locals.user_id = request.cookies["user_id"].id;
+  }
   next();
 
 });
@@ -97,12 +99,16 @@ app.post("/register", (request, response) => {
     response.status(400).send("User with that email already exists!");
   } else {
     
-    const id = helpers.generateRandomString();    
+    const id = helpers.generateRandomString();  
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    console.log(users);
     users[id] = {
       id,
       email,
-      password
+      password: hashedPassword
       };
+    console.log('After');
+    console.log(users);
 
     response.cookie("user_id", users[id]);
 
