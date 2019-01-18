@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session');
 const helpers = require("./lib/helpers");
 const app = express();
 const PORT = 8078;
@@ -33,13 +33,18 @@ const users = {
   }
 }
 
+app.use(cookieSession({
+  name: 'session',
+  keys: ['bork'], // Note that in actualy deployments, you would set secret keys using environment variables
 
-app.use(cookieParser());
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 // Middleware that adds a user to the locals object for easy access
 app.use( (request, response, next) => {
-  if (request.cookies["user_id"]) {
-    response.locals.user_id = request.cookies["user_id"].id;
+  if (request.session.user_id) {
+    response.locals.user_id = request.session.user_id.id;
   }
   next();
 
@@ -47,7 +52,7 @@ app.use( (request, response, next) => {
 
 app.get('/login', function (request, response) {
   
-  const cookie = request.cookies["user_id"];
+  const cookie = request.session.user_id;
 
   if (cookie) {
 
@@ -69,7 +74,7 @@ app.post('/login', function (request, response) {
 
   if (id = helpers.checkEmailPasswordMatch(users, email, password, bcrypt)) {
     
-    response.cookie('user_id', users[id]);
+    request.session.user_id = users[id];
     return response.redirect('/');
 
   } else {
@@ -101,16 +106,16 @@ app.post("/register", (request, response) => {
     
     const id = helpers.generateRandomString();  
     const hashedPassword = bcrypt.hashSync(password, 10);
-    console.log(users);
+
     users[id] = {
       id,
       email,
       password: hashedPassword
       };
-    console.log('After');
-    console.log(users);
 
-    response.cookie("user_id", users[id]);
+    request.session.user_id = users[id];
+
+    urlDatabase[id] = {};
 
     response.redirect("/urls");
   }
@@ -131,7 +136,7 @@ app.get("/u/:shortURL", (request, response) => {
 
 app.use('/urls/new', (request, response, next) => {
   
-  const loggedIn = Boolean(request.cookies["user_id"]);
+  const loggedIn = request.session.user_id;
 
   if (loggedIn) {
 
@@ -148,15 +153,15 @@ app.use('/urls/new', (request, response, next) => {
 app.get("/urls/new", (request, response) => {
   let templateVars = { 
     urls: urlDatabase,
-    user: request.cookies["user_id"]  
+    user: request.session.user_id  
   };
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   response.render("urls_new", templateVars);
 });
 
- app.use( (request, response, next) => {
+app.use( (request, response, next) => {
 
-  const loggedIn = Boolean(request.cookies["user_id"]);
+  const loggedIn = request.session.user_id;
 
   if (loggedIn) {
 
@@ -172,7 +177,7 @@ app.get("/urls/new", (request, response) => {
 
 app.get('/', function (request, response) {
   
-  const cookie = request.cookies["user_id"];
+  const cookie = request.session.user_id;
 
   if (cookie) {
     return response.redirect('/urls');
@@ -188,7 +193,7 @@ app.get("/hello", (request, response) => {
 });
 
 app.post('/logout', (request, response) => {
-  response.clearCookie('user_id');
+  request.session = null;
   response.redirect('/urls');
 });
 
@@ -202,25 +207,28 @@ app.get("/urls", (request, response) => {
 
   let templateVars = { 
                       urls: urlDatabase[response.locals.user_id],
-                      user: request.cookies["user_id"]  
+                      user: request.session.user_id  
                       };
+
   response.render('urls_index', templateVars);
+
 });
 
 app.post("/urls", (request, response) => {
+
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const {longURL} = request.body;
   const shortURL = helpers.generateRandomString();
   urlDatabase[response.locals.user_id][shortURL] = longURL;
-
   response.redirect(`/urls/${shortURL}`);
+
 });
 
-app.get("/urls/:id", (request, response) => {
+app.get("/urls/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  const longURL = urlDatabase[response.locals.user_id][request.params.id.toString()];
-  let templateVars = { user: request.cookies["user_id"],
-                       shortURL: request.params.id,
+  const longURL = urlDatabase[response.locals.user_id][request.params.shortURL.toString()];
+  let templateVars = { user: request.session.user_id,
+                       shortURL: request.params.shortURL,
                        longURL: longURL};
   response.render("urls_show", templateVars);
 });
@@ -233,7 +241,7 @@ app.post("/urls/:shortURL", (request, response) => {
     if (urlDatabase[response.locals.user_id][shortURL]) {
       urlDatabase[response.locals.user_id][shortURL] = newLongURL;
 
-      let templateVars = { user: request.cookies["user_id"],
+      let templateVars = { user: request.session.user_id,
                           shortURL,
                           longURL : newLongURL
                         };
