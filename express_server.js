@@ -64,7 +64,7 @@ app.get('/login', function (request, response) {
 
   if (cookie) {
 
-    response.status(400).send("Already logged in.");
+    response.redirect("/urls");
 
   } else {
 
@@ -256,6 +256,7 @@ app.get("/urls/:id", (request, response) => {
 });
 
 app.post("/urls/:id", (request, response) => {
+
   const shortURL = request.params.id;
   const newLongURL = request.body.longURL;
   
@@ -275,6 +276,7 @@ app.post("/urls/:id", (request, response) => {
   } else {
     return response.status(400).send("Must enter a new long URL");
   }  
+
 });
 
 app.post("/urls/:id/delete", (request, response) => {
