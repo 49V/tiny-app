@@ -29,32 +29,22 @@ const users = {
 }
 
 
-app.use(cookieParser())
+app.use(cookieParser());
 
-app.get('/', function (request, response) {
+// Middleware that adds a user
+
+app.get('/login', function (request, response) {
   
   const cookie = request.cookies["user_id"];
 
   if (cookie) {
-    return response.redirect('/urls');
-  } else {
-    return response.redirect('/login');
-  }
 
-});
-
-app.get("/hello", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get('/login', function (request, response) {
-  const cookie = request.cookies["user_id"];
-
-  if (cookie) {
     response.status(400).send("Already logged in.");
+
   } else {
-    response.render('login')
+
+    response.render('login');
+
   }
   
 });
@@ -62,25 +52,25 @@ app.get('/login', function (request, response) {
 app.post('/login', function (request, response) {
   
   const { email, password } = request.body;
+
   let id;
-  console.log(`${email} : ${password}`)
+
   if (id = helpers.checkEmailPasswordMatch(users, email, password)) {
+    
     response.cookie('user_id', users[id]);
     return response.redirect('/');
+
   } else {
+
     return response.status(403).send("Incorrect email / password combination");
+  
   }
-
-  return;
-});
-
-app.post('/logout', (request, response) => {
-  response.clearCookie('user_id');
-  response.redirect('/urls');
 });
 
 app.get("/register", (request, response) => {
+
   response.render('register');
+
 });
 
 app.post("/register", (request, response) => {
@@ -102,15 +92,13 @@ app.post("/register", (request, response) => {
       id,
       email,
       password
-    };
+      };
 
     response.cookie("user_id", users[id]);
 
     response.redirect("/urls");
   }
-
 });
-
 
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
@@ -120,6 +108,66 @@ app.get("/u/:shortURL", (request, response) => {
   // If exists
   response.redirect(longURL);
   // Else
+});
+
+/*
+ * -----------------------------------------------
+ * ALL CODE BELOW REQUIRES AUTHENTICATION!
+ * -----------------------------------------------
+ */
+
+app.use('/urls/new', (request, response, next) => {
+  
+  const loggedIn = Boolean(request.cookies["user_id"]);
+
+  if (loggedIn) {
+
+    next();
+
+  } else {
+
+    return response.redirect('/login');
+
+  }
+
+});
+
+ app.use( (request, response, next) => {
+
+  const loggedIn = Boolean(request.cookies["user_id"]);
+
+  if (loggedIn) {
+
+    next();
+
+  } else {
+
+    return response.status(401).send("You need to log in");
+
+  }
+
+});
+
+app.get('/', function (request, response) {
+  
+  const cookie = request.cookies["user_id"];
+
+  if (cookie) {
+    return response.redirect('/urls');
+  } else {
+    return response.redirect('/login');
+  }
+
+});
+
+app.get("/hello", (request, response) => {
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+  response.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.post('/logout', (request, response) => {
+  response.clearCookie('user_id');
+  response.redirect('/urls');
 });
 
 app.get("/urls.json", (request, response) => {
@@ -135,15 +183,6 @@ app.get("/urls", (request, response) => {
                       user: request.cookies["user_id"]  
                       };
   response.render('urls_index', templateVars);
-});
-
-app.get("/urls/new", (request, response) => {
-  let templateVars = { 
-    urls: urlDatabase,
-    user: request.cookies["user_id"]  
-  };
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.render("urls_new", templateVars);
 });
 
 app.post("/urls", (request, response) => {
