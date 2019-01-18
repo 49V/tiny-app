@@ -11,8 +11,12 @@ app.set("view engine", "ejs");
 
 // TODO: ADD ALL ERROR HANDLING
 const urlDatabase = {
-  "b2xVn2" : "http://www.lighthouselabs.ca",
-  "9sm5xK" : "http://www.google.com"
+  "userRandomID" : { 
+    "b2xVn2": "http://www.lighthouselabs.ca",
+  },
+  "user2RandomID" : {
+    "9sm5xK" : "http://www.google.com",
+  }
 };
 
 const users = { 
@@ -31,7 +35,13 @@ const users = {
 
 app.use(cookieParser());
 
-// Middleware that adds a user
+// Middleware that adds a user to the locals object for easy access
+app.use( (request, response, next) => {
+
+  response.locals.user_id = request.cookies["user_id"].id;
+  next();
+
+});
 
 app.get('/login', function (request, response) {
   
@@ -102,12 +112,9 @@ app.post("/register", (request, response) => {
 
 app.get("/u/:shortURL", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  
-  let shortURL = request.url.replace('/u/', ''); 
-  let longURL = urlDatabase[shortURL];
-  // If exists
+  let shortURL = request.url.replace('/u/', '');
+  let longURL = urlDatabase[response.locals.user_id][shortURL];  
   response.redirect(longURL);
-  // Else
 });
 
 /*
@@ -130,6 +137,15 @@ app.use('/urls/new', (request, response, next) => {
 
   }
 
+});
+
+app.get("/urls/new", (request, response) => {
+  let templateVars = { 
+    urls: urlDatabase,
+    user: request.cookies["user_id"]  
+  };
+  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+  response.render("urls_new", templateVars);
 });
 
  app.use( (request, response, next) => {
@@ -179,7 +195,7 @@ app.get("/urls", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
 
   let templateVars = { 
-                      urls: urlDatabase,
+                      urls: urlDatabase[response.locals.user_id],
                       user: request.cookies["user_id"]  
                       };
   response.render('urls_index', templateVars);
@@ -189,14 +205,14 @@ app.post("/urls", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const {longURL} = request.body;
   const shortURL = helpers.generateRandomString();
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[response.locals.user_id][shortURL] = longURL;
 
   response.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  const longURL = urlDatabase[request.params.id.toString()];
+  const longURL = urlDatabase[response.locals.user_id][request.params.id.toString()];
   let templateVars = { user: request.cookies["user_id"],
                        shortURL: request.params.id,
                        longURL: longURL};
@@ -208,7 +224,7 @@ app.post("/urls/:shortURL", (request, response) => {
   const newLongURL = request.body.longURL;
   
   if (newLongURL) {
-    urlDatabase[shortURL] = newLongURL;
+    urlDatabase[response.locals.user_id][shortURL] = newLongURL;
 
     let templateVars = { user: request.cookies["user_id"],
                          shortURL,
@@ -225,7 +241,7 @@ app.post("/urls/:shortURL", (request, response) => {
 app.post("/urls/:id/delete", (request, response) => {
   const shortURL = request.params.id;
   if(shortURL) {
-    delete urlDatabase[shortURL];
+    delete urlDatabase[response.locals.user_id][shortURL];
     response.redirect("/urls");
   } else {
     // Resource doesn't exist
