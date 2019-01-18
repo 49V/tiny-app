@@ -67,7 +67,7 @@ app.post('/login', function (request, response) {
 
   let id;
 
-  if (id = helpers.checkEmailPasswordMatch(users, email, password)) {
+  if (id = helpers.checkEmailPasswordMatch(users, email, password, bcrypt)) {
     
     response.cookie('user_id', users[id]);
     return response.redirect('/');
