@@ -129,11 +129,15 @@ app.post("/register", (request, response) => {
   }
 });
 
-app.get("/u/:shortURL", (request, response) => {
+app.get("/u/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  let shortURL = request.url.replace('/u/', '');
-  let longURL = urlDatabase[response.locals.user_id][shortURL];  
-  response.redirect(longURL);
+  let shortURL = request.params.id;
+  let longURL;
+  if (longURL = urlDatabase[response.locals.user_id][shortURL]) {
+    response.redirect(longURL);
+  } else {
+    response.status(404).send("Page not found");
+  }
 });
 
 /*
