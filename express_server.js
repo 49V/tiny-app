@@ -234,11 +234,21 @@ app.post("/urls", (request, response) => {
 
 app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  const longURL = urlDatabase[response.locals.user_id][request.params.id.toString()];
-  let templateVars = { user: request.session.user_id,
-                       shortURL: request.params.id,
-                       longURL: longURL};
-  response.render("urls_show", templateVars);
+  let longURL;
+
+  if (longURL = urlDatabase[response.locals.user_id][request.params.id.toString()]) {
+  
+    let templateVars = { user: request.session.user_id,
+                        shortURL: request.params.id,
+                        longURL: longURL};
+
+    response.render("urls_show", templateVars);
+
+  } else if (longURL === undefined) {
+    response.status(403).send("You do not own that URL");
+  } else {
+
+  }
 });
 
 app.post("/urls/:id", (request, response) => {
