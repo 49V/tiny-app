@@ -17,6 +17,9 @@ const urlDatabase = {
   },
   "user2RandomID" : {
     "9sm5xK" : "http://www.google.com",
+  },
+  "user3RandomID" : {
+    "s8df0x" : "https://nextcanada.com",
   }
 };
 
@@ -30,6 +33,11 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: '$2b$10$KiPYx7Cn.KdPVptIoFeocefn/Lcqb0QYkOcD3pd4M0fZQ3rQNX4pS'
+  },
+  "user3RandomID": {
+    id: "user3RandomID", 
+    email: "test@test.com", 
+    password: '$2b$10$u0yQRZigbr2rekGTnvTRm.zB6syHlUTctC/7iON.A7eGNZaWgcPya'
   }
 }
 
@@ -224,17 +232,17 @@ app.post("/urls", (request, response) => {
 
 });
 
-app.get("/urls/:shortURL", (request, response) => {
+app.get("/urls/:id", (request, response) => {
   // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  const longURL = urlDatabase[response.locals.user_id][request.params.shortURL.toString()];
+  const longURL = urlDatabase[response.locals.user_id][request.params.id.toString()];
   let templateVars = { user: request.session.user_id,
-                       shortURL: request.params.shortURL,
+                       shortURL: request.params.id,
                        longURL: longURL};
   response.render("urls_show", templateVars);
 });
 
-app.post("/urls/:shortURL", (request, response) => {
-  const shortURL = request.params.shortURL;
+app.post("/urls/:id", (request, response) => {
+  const shortURL = request.params.id;
   const newLongURL = request.body.longURL;
   
   if (newLongURL) {
