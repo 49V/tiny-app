@@ -224,25 +224,33 @@ app.post("/urls/:shortURL", (request, response) => {
   const newLongURL = request.body.longURL;
   
   if (newLongURL) {
-    urlDatabase[response.locals.user_id][shortURL] = newLongURL;
+    if (urlDatabase[response.locals.user_id][shortURL]) {
+      urlDatabase[response.locals.user_id][shortURL] = newLongURL;
 
-    let templateVars = { user: request.cookies["user_id"],
-                         shortURL,
-                         longURL : newLongURL
-                       };
+      let templateVars = { user: request.cookies["user_id"],
+                          shortURL,
+                          longURL : newLongURL
+                        };
 
-    response.render(`urls_show`, templateVars);
-    
+      return response.render(`urls_show`, templateVars);
+    } else {
+      return response.status(401).send("You cannot edit a shortURL you don't own");
+    }
   } else {
-    response.status(400).send("Must enter a new long URL");
+    return response.status(400).send("Must enter a new long URL");
   }  
 });
 
 app.post("/urls/:id/delete", (request, response) => {
   const shortURL = request.params.id;
   if(shortURL) {
-    delete urlDatabase[response.locals.user_id][shortURL];
-    response.redirect("/urls");
+    if (urlDatabase[response.locals.user_id][shortURL]) {
+      delete urlDatabase[response.locals.user_id][shortURL];
+      return response.redirect("/urls");
+    }
+    else {
+      return response.status(401).send("You cannot delete a shortURL you do not own");
+    }
   } else {
     // Resource doesn't exist
     response.statusCode = "404";
