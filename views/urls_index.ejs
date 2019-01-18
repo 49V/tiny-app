@@ -7,11 +7,13 @@
     <ul>
       <% for (var key in urls) { %>
         <center>
-          <li><a href="<%= urls[key] %>"><%= urls[key] %></a> : <%= key %></li>
+          <li><a href="<%= urls[key] %>"><%= urls[key] %></a> : <a href="/urls/<%= key  %>"><%= key %></a></li>
           <a href="/urls/<%= key %>">Edit</a>
           <form action="/urls/<%= key %>/delete" method="POST">
             <button>Delete</button>
           </form> 
+          <br />
+          <a href="/urls/new"><button>Create New Short Link</button> </a>
 
         </center>
       <% } %>
