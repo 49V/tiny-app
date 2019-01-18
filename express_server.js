@@ -94,8 +94,15 @@ app.post('/login', function (request, response) {
 
 app.get("/register", (request, response) => {
 
-  response.render('register');
+  if (response.locals.user_id) {
 
+    response.redirect('/urls');
+
+  } else {
+
+    response.render('register');
+
+  }
 });
 
 app.post("/register", (request, response) => {
