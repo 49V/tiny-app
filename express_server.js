@@ -1,3 +1,4 @@
+"use strict"
 const express = require("express");
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
@@ -43,14 +44,17 @@ const users = {
 
 app.use(cookieSession({
   name: 'session',
-  keys: ['bork'], // Note that in actualy deployments, you would set secret keys using environment variables
+  keys: ['bork'], // Note that in real, live deployments, you would set secret keys using environment variables
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-
-// Middleware that adds a user to the locals object for easy access
+ 
+/*
+ * Middleware that adds a user to the local object for easy access
+ */
 app.use( (request, response, next) => {
+
   if (request.session.user_id) {
     response.locals.user_id = request.session.user_id.id;
   }
@@ -60,15 +64,16 @@ app.use( (request, response, next) => {
 
 app.get('/login', function (request, response) {
   
+  // We check the cookie to see if a user is logged in
   const cookie = request.session.user_id;
 
   if (cookie) {
 
-    response.redirect("/urls");
+    return response.redirect("/urls");
 
   } else {
 
-    response.render('login');
+    return response.render('login');
 
   }
   
@@ -80,9 +85,24 @@ app.post('/login', function (request, response) {
 
   let id;
 
-  if (id = helpers.checkEmailPasswordMatch(users, email, password, bcrypt)) {
+  console.log(email, password);
+
+  if (email && !password) {
+
+    return response.status(400).send("Password is required to login");
+  
+  } else if (!email && password) {
+    
+    return response.status(400).send("Email is required to login");
+  
+  } else if (!email && !password) {
+    
+    return response.status(400).send("Both email and password are required to login");
+  
+  } else if (id = helpers.checkEmailPasswordMatch(users, email, password, bcrypt)) {
     
     request.session.user_id = users[id];
+
     return response.redirect('/');
 
   } else {
@@ -96,11 +116,11 @@ app.get("/register", (request, response) => {
 
   if (response.locals.user_id) {
 
-    response.redirect('/urls');
+    return response.redirect('/urls');
 
   } else {
 
-    response.render('register');
+    return response.render('register');
 
   }
 });
@@ -109,17 +129,26 @@ app.post("/register", (request, response) => {
   
   const {email, password} = request.body;
 
-  if(email && !password) {
-    response.status(400).send("Password is required to register");
-  } else if(!email && password) {
-    response.status(400).send("Email is required to register");
-  } else if(!email && !password) {
-    response.status(400).send("Both email and password are required to register");
-  } else if(helpers.objectValueExists(users, "email", email)) {
-    response.status(400).send("User with that email already exists!");
+  if (email && !password) {
+
+    return response.status(400).send("Password is required to register");
+  
+  } else if (!email && password) {
+    
+    return response.status(400).send("Email is required to register");
+  
+  } else if (!email && !password) {
+    
+    return response.status(400).send("Both email and password are required to register");
+  
+  } else if (helpers.objectValueExists(users, "email", email)) {
+    
+    return response.status(400).send("User with that email already exists!");
+  
   } else {
     
     const id = helpers.generateRandomString();  
+  
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     users[id] = {
@@ -132,25 +161,28 @@ app.post("/register", (request, response) => {
 
     urlDatabase[id] = {};
 
-    response.redirect("/urls");
+    return response.redirect("/urls");
   }
 });
 
 app.get("/u/:id", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+  
   let shortURL = request.params.id;
   let longURL;
+  
   if (longURL = urlDatabase[response.locals.user_id][shortURL]) {
-    response.redirect(longURL);
+    
+    return response.redirect(longURL);
+  
   } else {
-    response.status(404).send("Page not found");
+    
+    return response.status(404).send("Page not found");
+  
   }
 });
 
 /*
- * -----------------------------------------------
- * ALL CODE BELOW REQUIRES AUTHENTICATION!
- * -----------------------------------------------
+ * This middleware provides specific responses for /urls/new based upon login status
  */
 
 app.use('/urls/new', (request, response, next) => {
@@ -170,15 +202,22 @@ app.use('/urls/new', (request, response, next) => {
 });
 
 app.get("/urls/new", (request, response) => {
+  
   let templateVars = { 
     urls: urlDatabase,
     user: request.session.user_id  
   };
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.render("urls_new", templateVars);
+
+  return response.render("urls_new", templateVars);
+
 });
 
-app.use( (request, response, next) => {
+/*
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ * This middleware is used to check if a user is logged in such that ALL code below the middleware requires for a user to be logged in.
+ * ------------------------------------------------------------------------------------------------------------------------------------
+ */
+app.use((request, response, next) => {
 
   const loggedIn = request.session.user_id;
 
@@ -199,52 +238,62 @@ app.get('/', function (request, response) {
   const cookie = request.session.user_id;
 
   if (cookie) {
+    
     return response.redirect('/urls');
+  
   } else {
+    
     return response.redirect('/login');
+  
   }
 
 });
 
-app.get("/hello", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 app.post('/logout', (request, response) => {
+  
   request.session = null;
-  response.redirect('/urls');
+  return response.redirect('/urls');
+
 });
 
 app.get("/urls.json", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
-  response.json(urlDatabase);
+  
+  return response.json(urlDatabase);
+
 });
   
 app.get("/urls", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
 
   let templateVars = { 
                       urls: urlDatabase[response.locals.user_id],
                       user: request.session.user_id  
                       };
 
-  response.render('urls_index', templateVars);
+  return response.render('urls_index', templateVars);
 
 });
 
 app.post("/urls", (request, response) => {
 
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
   const {longURL} = request.body;
-  const shortURL = helpers.generateRandomString();
-  urlDatabase[response.locals.user_id][shortURL] = longURL;
-  response.redirect(`/urls/${shortURL}`);
+
+  if (longURL) {
+
+    const shortURL = helpers.generateRandomString();
+    urlDatabase[response.locals.user_id][shortURL] = longURL;
+
+  } else {
+
+    return response.status(400).send("You must enter a long URL");
+  
+  }
+
+  return response.redirect(`/urls/${shortURL}`);
 
 });
 
 app.get("/urls/:id", (request, response) => {
-  // TODO: WHAT IF THE VALUE DOESN'T EXIST?
+  
   let longURL;
 
   if (longURL = urlDatabase[response.locals.user_id][request.params.id.toString()]) {
@@ -253,11 +302,11 @@ app.get("/urls/:id", (request, response) => {
                         shortURL: request.params.id,
                         longURL: longURL};
 
-    response.render("urls_show", templateVars);
+    return response.render("urls_show", templateVars);
 
   } else if (longURL === undefined) {
-    response.status(403).send("You do not own that URL");
-  } else {
+    
+    return response.status(403).send("You do not own that URL");
 
   }
 });
@@ -267,8 +316,10 @@ app.post("/urls/:id", (request, response) => {
   const shortURL = request.params.id;
   const newLongURL = request.body.longURL;
   
-  if (newLongURL) {
+  if (newLongURL) { 
+    
     if (urlDatabase[response.locals.user_id][shortURL]) {
+      
       urlDatabase[response.locals.user_id][shortURL] = newLongURL;
 
       let templateVars = { user: request.session.user_id,
@@ -277,31 +328,46 @@ app.post("/urls/:id", (request, response) => {
                         };
 
       return response.render(`urls_show`, templateVars);
-    } else {
-      return response.status(401).send("You cannot edit a shortURL you don't own");
-    }
-  } else {
-    return response.status(400).send("Must enter a new long URL");
-  }  
 
+    } else {
+
+      return response.status(401).send("You cannot edit a shortURL you don't own");
+
+    }
+
+  } else {
+
+    return response.status(400).send("Must enter a new long URL");
+
+  }  
 });
 
 app.post("/urls/:id/delete", (request, response) => {
+  
   const shortURL = request.params.id;
-  if(shortURL) {
+
+  if (shortURL) {
+
     if (urlDatabase[response.locals.user_id][shortURL]) {
+
       delete urlDatabase[response.locals.user_id][shortURL];
+
       return response.redirect("/urls");
-    }
-    else {
-      return response.status(401).send("You cannot delete a shortURL you do not own");
+    
+    } else {
+
+      return response.status(401).send("You cannot delete a short URL you do not own");
+    
     }
   } else {
-    // Resource doesn't exist
-    response.statusCode = "404";
+
+    return response.statusCode(400).send("You must enter a URL");
+  
   }
 });
 
 app.listen(PORT, () => {
+
   console.log(`Example app listening on port ${PORT}!`);
+
 });
