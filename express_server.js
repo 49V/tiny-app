@@ -202,9 +202,10 @@ app.get("/urls", (request, response) => {
 
 app.post("/urls", (request, response) => {
   const {longURL} = request.body;
+  let shortURL;
 
   if (longURL) {
-    const shortURL = helpers.generateRandomString();
+    shortURL = helpers.generateRandomString();
     urlDatabase[response.locals.user_id][shortURL] = longURL;
   } else {
     return response.status(400).send("You must enter a long URL");
