@@ -8,6 +8,7 @@ const app = express();
 const PORT = 8078;
 
 app.use(bodyParser.urlencoded({ extended: true}));
+app.use(express.static('./views/css/'));
 
 app.set("view engine", "ejs");
 
