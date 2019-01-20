@@ -167,7 +167,7 @@ app.use((request, response, next) => {
   if (loggedIn) {
     next();
   } else {
-    return response.status(401).send('You need to login.');
+    return response.redirect('/login');    
   }
 });
 
