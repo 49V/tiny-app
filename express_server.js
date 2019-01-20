@@ -61,11 +61,12 @@ app.use( (request, response, next) => {
 app.get('/login', function (request, response) {
   // Check if user is logged in
   const cookie = request.session.user_id;
+  const templateVars = { user: null };
 
   if (cookie) {
     return response.redirect("/urls");
   } else {
-    return response.render('login');
+    return response.render('login', templateVars);
   }
 });
 
@@ -88,10 +89,12 @@ app.post('/login', function (request, response) {
 });
 
 app.get("/register", (request, response) => {
+  const templateVars = { user: null };
+
   if (response.locals.user_id) {
     return response.redirect('/urls');
   } else {
-    return response.render('register');
+    return response.render('register', templateVars);
   }
 });
 
