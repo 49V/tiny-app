@@ -11,7 +11,6 @@ app.use(bodyParser.urlencoded({ extended: true}));
 
 app.set("view engine", "ejs");
 
-// TODO: ADD ALL ERROR HANDLING
 const urlDatabase = {
   "userRandomID" : { 
     "b2xVn2": "http://www.lighthouselabs.ca",
@@ -44,8 +43,7 @@ const users = {
 
 app.use(cookieSession({
   name: 'session',
-  keys: ['bork'], // Note that in real, live deployments, you would set secret keys using environment variables
-
+  keys: ['bork'],
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
@@ -54,101 +52,62 @@ app.use(cookieSession({
  * Middleware that adds a user to the local object for easy access
  */
 app.use( (request, response, next) => {
-
   if (request.session.user_id) {
     response.locals.user_id = request.session.user_id.id;
   }
   next();
-
 });
 
 app.get('/login', function (request, response) {
-  
-  // We check the cookie to see if a user is logged in
+  // Check if user is logged in
   const cookie = request.session.user_id;
 
   if (cookie) {
-
     return response.redirect("/urls");
-
   } else {
-
     return response.render('login');
-
   }
-  
 });
 
 app.post('/login', function (request, response) {
-  
   const { email, password } = request.body;
-
   let id;
 
-  console.log(email, password);
-
   if (email && !password) {
-
     return response.status(400).send("Password is required to login");
-  
   } else if (!email && password) {
-    
     return response.status(400).send("Email is required to login");
-  
   } else if (!email && !password) {
-    
     return response.status(400).send("Both email and password are required to login");
-  
   } else if (id = helpers.checkEmailPasswordMatch(users, email, password, bcrypt)) {
-    
     request.session.user_id = users[id];
-
     return response.redirect('/');
-
   } else {
-
     return response.status(403).send("Incorrect email / password combination");
-  
   }
 });
 
 app.get("/register", (request, response) => {
-
   if (response.locals.user_id) {
-
     return response.redirect('/urls');
-
   } else {
-
     return response.render('register');
-
   }
 });
 
 app.post("/register", (request, response) => {
-  
   const {email, password} = request.body;
 
   if (email && !password) {
-
     return response.status(400).send("Password is required to register");
-  
   } else if (!email && password) {
-    
     return response.status(400).send("Email is required to register");
-  
   } else if (!email && !password) {
-    
     return response.status(400).send("Both email and password are required to register");
-  
   } else if (helpers.objectValueExists(users, "email", email)) {
-    
     return response.status(400).send("User with that email already exists!");
-  
   } else {
-    
     const id = helpers.generateRandomString();  
-  
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     users[id] = {
@@ -156,9 +115,7 @@ app.post("/register", (request, response) => {
       email,
       password: hashedPassword
       };
-
     request.session.user_id = users[id];
-
     urlDatabase[id] = {};
 
     return response.redirect("/urls");
@@ -166,18 +123,13 @@ app.post("/register", (request, response) => {
 });
 
 app.get("/u/:id", (request, response) => {
-  
   let shortURL = request.params.id;
   let longURL;
   
   if (longURL = urlDatabase[response.locals.user_id][shortURL]) {
-    
     return response.redirect(longURL);
-  
   } else {
-    
     return response.status(404).send("Page not found");
-  
   }
 });
 
@@ -186,30 +138,22 @@ app.get("/u/:id", (request, response) => {
  */
 
 app.use('/urls/new', (request, response, next) => {
-  
   const loggedIn = request.session.user_id;
 
   if (loggedIn) {
-
     next();
-
   } else {
-
     return response.redirect('/login');
-
   }
-
 });
 
 app.get("/urls/new", (request, response) => {
-  
   let templateVars = { 
     urls: urlDatabase,
     user: request.session.user_id  
   };
 
   return response.render("urls_new", templateVars);
-
 });
 
 /*
@@ -218,108 +162,76 @@ app.get("/urls/new", (request, response) => {
  * ------------------------------------------------------------------------------------------------------------------------------------
  */
 app.use((request, response, next) => {
-
   const loggedIn = request.session.user_id;
 
   if (loggedIn) {
-
     next();
-
   } else {
-
     return response.status(401).send('You need to login.');
-
   }
-
 });
 
 app.get('/', function (request, response) {
-  
+  // Check if user is logged in
   const cookie = request.session.user_id;
 
   if (cookie) {
-    
     return response.redirect('/urls');
-  
   } else {
-    
     return response.redirect('/login');
-  
   }
-
 });
 
 app.post('/logout', (request, response) => {
-  
   request.session = null;
   return response.redirect('/urls');
-
 });
 
 app.get("/urls.json", (request, response) => {
-  
   return response.json(urlDatabase);
-
 });
   
 app.get("/urls", (request, response) => {
-
   let templateVars = { 
                       urls: urlDatabase[response.locals.user_id],
                       user: request.session.user_id  
                       };
 
   return response.render('urls_index', templateVars);
-
 });
 
 app.post("/urls", (request, response) => {
-
   const {longURL} = request.body;
 
   if (longURL) {
-
     const shortURL = helpers.generateRandomString();
     urlDatabase[response.locals.user_id][shortURL] = longURL;
-
   } else {
-
     return response.status(400).send("You must enter a long URL");
-  
   }
 
   return response.redirect(`/urls/${shortURL}`);
-
 });
 
 app.get("/urls/:id", (request, response) => {
-  
   let longURL;
 
   if (longURL = urlDatabase[response.locals.user_id][request.params.id.toString()]) {
-  
     let templateVars = { user: request.session.user_id,
                         shortURL: request.params.id,
                         longURL: longURL};
-
     return response.render("urls_show", templateVars);
-
   } else if (longURL === undefined) {
-    
     return response.status(403).send("You do not own that URL");
-
   }
 });
 
 app.post("/urls/:id", (request, response) => {
-
   const shortURL = request.params.id;
   const newLongURL = request.body.longURL;
   
   if (newLongURL) { 
-    
     if (urlDatabase[response.locals.user_id][shortURL]) {
-      
       urlDatabase[response.locals.user_id][shortURL] = newLongURL;
 
       let templateVars = { user: request.session.user_id,
@@ -328,46 +240,30 @@ app.post("/urls/:id", (request, response) => {
                         };
 
       return response.render(`urls_show`, templateVars);
-
     } else {
-
       return response.status(401).send("You cannot edit a shortURL you don't own");
-
     }
-
   } else {
-
     return response.status(400).send("Must enter a new long URL");
-
   }  
 });
 
 app.post("/urls/:id/delete", (request, response) => {
-  
   const shortURL = request.params.id;
 
   if (shortURL) {
-
     if (urlDatabase[response.locals.user_id][shortURL]) {
-
       delete urlDatabase[response.locals.user_id][shortURL];
 
       return response.redirect("/urls");
-    
     } else {
-
       return response.status(401).send("You cannot delete a short URL you do not own");
-    
     }
   } else {
-
     return response.statusCode(400).send("You must enter a URL");
-  
   }
 });
 
 app.listen(PORT, () => {
-
   console.log(`Example app listening on port ${PORT}!`);
-
 });
