@@ -128,10 +128,9 @@ app.post("/register", (request, response) => {
 
 app.get("/u/:id", (request, response) => {
   let shortURL = request.params.id;
-  let longURL;
-  
-  if (longURL = urlDatabase[response.locals.user_id][shortURL]) {
-    return response.redirect(longURL);
+  let key;
+  if(key = helpers.getCorrectKey(urlDatabase, shortURL)) {
+    return response.redirect(urlDatabase[key][shortURL]);
   } else {
     return response.status(404).send("Page not found");
   }
